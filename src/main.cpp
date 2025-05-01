@@ -5,15 +5,19 @@
 
 int main()
 {
-  std::cout << "You should see a window that opens as well as this writing to console..."
-            << std::endl;
-
   // create window and set up
   sf::RenderWindow window(sf::VideoMode(800, 800), "Falling Sand Simulator");
+
+  sf::Image icon = sf::Image();
+  if (!icon.loadFromFile("../Data/icon.png")) {
+    std::cerr << "Error loading icon" << std::endl;
+  }
+  window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
   Game game(window);
 
   window.setFramerateLimit(game.TARGET_FPS);
+
 
   // A Clock starts counting as soon as it's created
   sf::Clock clock;
