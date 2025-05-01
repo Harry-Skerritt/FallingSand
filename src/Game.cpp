@@ -36,20 +36,24 @@ void Game::cachePixels() {
   sf::Vector2u img_size = album.getSize();
   image_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y));
 
-  // Fill image_colors to match grid size
+  colour_data_image.create(cell_amt_x, cell_amt_y);
+
   for (int x = 0; x < cell_amt_x; x++) {
     for (int y = 0; y < cell_amt_y; y++) {
-      // Map grid to image using normalized coordinates
       unsigned int src_x = static_cast<unsigned int>((x / static_cast<float>(cell_amt_x)) * img_size.x);
       unsigned int src_y = static_cast<unsigned int>((y / static_cast<float>(cell_amt_y)) * img_size.y);
 
-      // Clamp to ensure safe access
       src_x = std::min(src_x, img_size.x - 1);
       src_y = std::min(src_y, img_size.y - 1);
 
-      image_colours[x][y] = album.getPixel(src_x, src_y);
+      sf::Color col = album.getPixel(src_x, src_y);
+      image_colours[x][y] = col;
+      colour_data_image.setPixel(x, y, col);
     }
   }
+
+  colour_data_texture.loadFromImage(colour_data_image);
+  colour_data_texture.setSmooth(false);
 
 }
 
@@ -116,12 +120,24 @@ bool Game::init()
 
   if (loadAlbum("../Data/gsiosp.png")) {
     cachePixels();
+
+    sand_verts.setPrimitiveType(sf::Quads);
+    sand_verts.resize(cell_amt_x * cell_amt_y * 4);
+
     background_colour = getAverageColour(album);
     background.setFillColor(sf::Color(background_colour.r, background_colour.g, background_colour.b, background_colour.a * 0.4f));
   }
   else {
     std::cerr << "Failed to load and cache album" << std::endl;
     return false;
+  }
+
+  if (!sand_shader.loadFromFile("../Data/Shaders/sand_shader.frag", sf::Shader::Fragment)) {
+    std::cerr << "Failed to load sand_shader.frag" << std::endl;
+    shader_loaded = false;
+  }
+  else {
+    shader_loaded = true;
   }
 
 
@@ -185,6 +201,8 @@ void Game::update(float dt)
 
   // FPS
   calcFPS();
+
+  std::cout << "Sand Particles: " << getSandParticleCount() << std::endl;
 }
 
 void Game::calcFPS() {
@@ -249,6 +267,18 @@ void Game::spawnNewSand() {
   }
 }
 
+int Game::getSandParticleCount() const {
+  int count = 0;
+  for (int i = 0; i < cell_amt_x; ++i) {
+    for (int j = 0; j < cell_amt_y; ++j) {
+      if (grid[i][j] > 0) {
+        ++count;
+      }
+    }
+  }
+  return count;
+}
+
 sf::RectangleShape Game::drawCell(sf::Vector2i interator, sf::Color colour) {
   sf::RectangleShape rect;
   rect.setSize(sf::Vector2f(sand_size, sand_size));
@@ -260,16 +290,35 @@ sf::RectangleShape Game::drawCell(sf::Vector2i interator, sf::Color colour) {
 
 void Game::render()
 {
-
   window.draw(background);
+
+  sand_verts.clear();
+  sand_verts.setPrimitiveType(sf::Quads);
 
   for (int i = 0; i < cell_amt_x; i++) {
     for (int j = 0; j < cell_amt_y; j++) {
       if (grid[i][j] > 0) {
-       window.draw(drawCell({i, j}, image_colours[i][j]));
+        float x = i * sand_size;
+        float y = j * sand_size;
+
+        sf::Vertex v0(sf::Vector2f(x, y), sf::Vector2f(i, j));         // top-left
+        sf::Vertex v1(sf::Vector2f(x + sand_size, y), sf::Vector2f(i + 1, j)); // top-right
+        sf::Vertex v2(sf::Vector2f(x + sand_size, y + sand_size), sf::Vector2f(i + 1, j + 1)); // bottom-right
+        sf::Vertex v3(sf::Vector2f(x, y + sand_size), sf::Vector2f(i, j + 1)); // bottom-left
+
+        sand_verts.append(v0);
+        sand_verts.append(v1);
+        sand_verts.append(v2);
+        sand_verts.append(v3);
       }
     }
   }
+
+  sf::RenderStates states;
+  states.shader = &sand_shader; // <- You load this in init
+  states.texture = &colour_data_texture;
+
+  window.draw(sand_verts, states);
 }
 
   void Game::mouseClicked(sf::Event event)

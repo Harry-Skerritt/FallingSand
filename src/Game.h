@@ -8,7 +8,7 @@ class Game
 {
  public:
 
- const static int TARGET_FPS = 144;
+ const static int TARGET_FPS = 14400000;
 
   Game(sf::RenderWindow& window);
   ~Game();
@@ -38,6 +38,8 @@ class Game
  void cachePixels();
  sf::Color getAverageColour(const sf::Image& image);
 
+ int getSandParticleCount() const;
+
  void calcFPS();
 
  private:
@@ -49,15 +51,23 @@ class Game
   std::vector<std::vector<sf::Color>> grid_colours;
   std::vector<std::vector<sf::Color>> image_colours;
 
-  float sand_size = 5; // "resolution"
+  float sand_size = 2; // "resolution"
   int cell_amt_x, cell_amt_y;
 
- float spawn_size = 8; // "5x5 grid"
+ float spawn_size = 80; // "5x5 grid"
  int multiple_spawn_change = 40; // 40%
  bool spawn_multiple = true;
 
  // Map to picture
  sf::Image album;
+ sf::Texture colour_data_texture;
+ sf::Image colour_data_image;
+
+
+ // Sand
+ sf::VertexArray sand_verts;
+
+
  sf::Color background_colour;
 
  sf::RectangleShape background;
@@ -71,6 +81,10 @@ class Game
  int frameCount = 0;
  float fps = 0.f;
 
+ // Shader
+ sf::Shader sand_shader;
+ bool shader_loaded = false;
+ sf::Clock clock;
 
 
 };
