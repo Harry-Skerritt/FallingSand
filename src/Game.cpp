@@ -118,20 +118,46 @@ bool Game::init()
   background.setSize(window_size);
   background.setFillColor(sf::Color::White);
 
-  if (loadAlbum("../Data/gsiosp.png")) {
+  if (loadAlbum("../Data/rainbow.jpg")) {
     cachePixels();
-
-    sand_verts.setPrimitiveType(sf::Quads);
-    sand_verts.resize(cell_amt_x * cell_amt_y * 4);
-
-    background_colour = getAverageColour(album);
-    background.setFillColor(sf::Color(background_colour.r, background_colour.g, background_colour.b, background_colour.a * 0.4f));
   }
   else {
     std::cerr << "Failed to load and cache album" << std::endl;
     return false;
   }
 
+  sand_verts.setPrimitiveType(sf::Quads);
+  sand_verts.resize(cell_amt_x * cell_amt_y * 4);
+
+  background_colour = getAverageColour(album);
+  background.setFillColor(sf::Color(background_colour.r * 0.4f, background_colour.g * 0.4f, background_colour.b * 0.4f, background_colour.a));
+
+  if (!font.loadFromFile("../Data/Fonts/CourierPrime-Bold.ttf")) {
+    std::cerr << "Failed to load font" << std::endl;
+    return false;
+  }
+
+  // Info
+  fps_text.setFont(font);
+  fps_text.setCharacterSize(20);
+  fps_text.setFillColor(sf::Color::White);
+  fps_text.setPosition(10, 10);
+  fps_text.setString("FPS: 000");
+
+  particle_text.setFont(font);
+  particle_text.setCharacterSize(20);
+  particle_text.setFillColor(sf::Color::White);
+  particle_text.setPosition(10, fps_text.getPosition().y + fps_text.getGlobalBounds().height + 10);
+  particle_text.setString("Sand: 000000");
+
+  spawn_text.setFont(font);
+  spawn_text.setCharacterSize(20);
+  spawn_text.setFillColor(sf::Color::White);
+  spawn_text.setPosition(10, particle_text.getPosition().y + particle_text.getGlobalBounds().height + 10);
+  spawn_text.setString("Spawn Size: 0");
+
+
+  // Shader
   if (!sand_shader.loadFromFile("../Data/Shaders/sand_shader.frag", sf::Shader::Fragment)) {
     std::cerr << "Failed to load sand_shader.frag" << std::endl;
     shader_loaded = false;
@@ -198,11 +224,14 @@ void Game::update(float dt)
         spawnNewSand();
     }
 
-
-  // FPS
+  //
   calcFPS();
-
-  std::cout << "Sand Particles: " << getSandParticleCount() << std::endl;
+  fps_text.setString("FPS: " + std::to_string(static_cast<float>(static_cast<int>(fps * 10.)) / 10.));
+  fps_text.setPosition(10, 10);
+  particle_text.setString("Sand: " + std::to_string(getSandParticleCount()));
+  particle_text.setPosition(10, fps_text.getPosition().y + fps_text.getGlobalBounds().height + 10);
+  spawn_text.setString("Spawn Size: " + std::to_string(spawn_size));
+  spawn_text.setPosition(10, particle_text.getPosition().y + particle_text.getGlobalBounds().height + 10);
 }
 
 void Game::calcFPS() {
@@ -210,15 +239,10 @@ void Game::calcFPS() {
 
   if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
     fps = frameCount / fpsClock.getElapsedTime().asSeconds();
-    if (fps < (TARGET_FPS / 2)) {
-      std::cerr << "FPS: " << fps << std::endl;
-    }
-    else {
-      std::cout << "FPS: " << fps << std::endl;
-    }
     frameCount = 0;
     fpsClock.restart();
   }
+
 }
 
 
@@ -319,6 +343,13 @@ void Game::render()
   states.texture = &colour_data_texture;
 
   window.draw(sand_verts, states);
+
+
+  if (draw_info) {
+    window.draw(fps_text);
+    window.draw(particle_text);
+    window.draw(spawn_text);
+  }
 }
 
   void Game::mouseClicked(sf::Event event)
@@ -348,6 +379,10 @@ void Game::keyPressed(sf::Event event)
     }
   }
 
+  if (event.key.code == sf::Keyboard::F3) {
+    draw_info = !draw_info;
+  }
+
 }
 
 void Game::keyReleased(sf::Event event)
@@ -357,6 +392,18 @@ void Game::keyReleased(sf::Event event)
 
 void Game::mouseScroll(sf::Event event)
 {
+  if (event.mouseWheelScroll.delta > 0) {
+    spawn_size++;
+  }
+  else if (event.mouseWheelScroll.delta < 0) {
+    if (spawn_size < 1) {
+      spawn_size = 1;
+    }
+    else {
+      spawn_size--;
+    }
+  }
+
 
 }
 

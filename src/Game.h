@@ -8,7 +8,7 @@ class Game
 {
  public:
 
- const static int TARGET_FPS = 14400000;
+ const static int TARGET_FPS = 144;
 
   Game(sf::RenderWindow& window);
   ~Game();
@@ -54,7 +54,7 @@ class Game
   float sand_size = 2; // "resolution"
   int cell_amt_x, cell_amt_y;
 
- float spawn_size = 80; // "5x5 grid"
+ int spawn_size = 1; // "5x5 grid"
  int multiple_spawn_change = 40; // 40%
  bool spawn_multiple = true;
 
@@ -63,14 +63,18 @@ class Game
  sf::Texture colour_data_texture;
  sf::Image colour_data_image;
 
-
  // Sand
  sf::VertexArray sand_verts;
 
-
  sf::Color background_colour;
-
  sf::RectangleShape background;
+
+ // Info
+ sf::Font font;
+ sf::Text fps_text;
+ sf::Text particle_text;
+ sf::Text spawn_text;
+ bool draw_info = true;
 
  // Mouse drag
  bool is_left_mouse_down = false;
@@ -85,6 +89,7 @@ class Game
  sf::Shader sand_shader;
  bool shader_loaded = false;
  sf::Clock clock;
+
 
 
 };
