@@ -22,6 +22,52 @@ bool Game::within_rows(int y) const {
   return y >= 0 && y < cell_amt_y;
 }
 
+bool Game::loadAlbum(std::string loc) {
+  if (!album.loadFromFile(loc)) {
+    std::cerr << "Failed to load album: " << loc << std::endl;
+    return false;
+  }
+  return true;
+}
+
+void Game::cachePixels() {
+  sf::Vector2u img_size = album.getSize();
+  image_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y));
+
+  // Fill image_colors to match grid size
+  for (int x = 0; x < cell_amt_x; x++) {
+    for (int y = 0; y < cell_amt_y; y++) {
+      // Map grid to image using normalized coordinates
+      unsigned int src_x = static_cast<unsigned int>((x / static_cast<float>(cell_amt_x)) * img_size.x);
+      unsigned int src_y = static_cast<unsigned int>((y / static_cast<float>(cell_amt_y)) * img_size.y);
+
+      // Clamp to ensure safe access
+      src_x = std::min(src_x, img_size.x - 1);
+      src_y = std::min(src_y, img_size.y - 1);
+
+      image_colours[x][y] = album.getPixel(src_x, src_y);
+    }
+  }
+
+}
+
+
+float Game::getFilledPercentage() const {
+  int filled_cells = 0;
+  for (int i = 0; i < cell_amt_x; i++) {
+    for (int j = 0; j < cell_amt_y; j++) {
+      if (grid[i][j] == 1) {  // Sand cell
+        filled_cells++;
+      }
+    }
+  }
+
+  float fill_percentage = (filled_cells / static_cast<float>(cell_amt_x * cell_amt_y)) * 100;
+
+  return fill_percentage;
+}
+
+
 bool Game::init()
 {
   window_size = static_cast<sf::Vector2f>(window.getSize());
@@ -30,66 +76,94 @@ bool Game::init()
   cell_amt_y = window_size.y / sand_size;
 
   grid.resize(cell_amt_x, std::vector<int>(cell_amt_y, 0));
+  grid_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y, sf::Color::Transparent));
+  image_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y, sf::Color::Black));
 
-  for (int i = 0; i < cell_amt_x; i++) {
-    for (int j = 0; j < cell_amt_y; j++) {
-      grid[i][j] = 0;
-    }
+  if (loadAlbum("../Data/ssoass.jpg")) {
+    cachePixels();
   }
+  else {
+    std::cerr << "Failed to load and cache album" << std::endl;
+    return false;
+  }
+
+
 
   return true;
 }
 
 void Game::update(float dt)
 {
-  auto new_grid = grid;
+    auto new_grid = grid;
+    auto new_grid_colours = grid_colours;
 
-  for (int i = 0; i < cell_amt_x; i++) {
-    for (int j = cell_amt_y - 2; j >= 0; j--) {  // Iterate from bottom to top
-      auto grid_current = grid[i][j];
+    for (int i = 0; i < cell_amt_x; i++) {
+        for (int j = cell_amt_y - 2; j >= 0; j--) {
 
-      if (grid_current == 1) {  // Only move sand (value 1)
-        // Check the space directly below
-        int below_current = (within_rows(j + 1)) ? grid[i][j + 1] : -1;
+            auto grid_current = grid[i][j];
 
-        // Randomly select left or right diagonal direction
-        int dir = (rand() % 2 == 0) ? 1 : -1;
-        int below_a = -1;
-        int below_b = -1;
+            if (grid_current == 1) {
+                int below_current = (within_rows(j + 1)) ? grid[i][j + 1] : -1;
 
-        // Check the left and right diagonal space
-        if (within_cols(i + dir) && within_rows(j + 1)) {
-          below_a = grid[i + dir][j + 1];
+                int dir = (rand() % 2 == 0) ? 1 : -1;
+                int below_a = -1;
+                int below_b = -1;
+
+                if (within_cols(i + dir) && within_rows(j + 1)) {
+                    below_a = grid[i + dir][j + 1];
+                }
+
+                if (within_cols(i - dir) && within_rows(j + 1)) {
+                    below_b = grid[i - dir][j + 1];
+                }
+
+              if (below_current == 0) {
+                new_grid[i][j + 1] = grid_current;
+                new_grid_colours[i][j + 1] = image_colours[i][j + 1];
+                new_grid[i][j] = 0;
+                new_grid_colours[i][j] = sf::Color::Transparent;
+              }
+              else if (below_a == 0) {
+                new_grid[i + dir][j + 1] = grid_current;
+                new_grid_colours[i + dir][j + 1] = image_colours[i + dir][j + 1];
+                new_grid[i][j] = 0;
+                new_grid_colours[i][j] = sf::Color::Transparent;
+              }
+              else if (below_b == 0) {
+                new_grid[i - dir][j + 1] = grid_current;
+                new_grid_colours[i - dir][j + 1] = image_colours[i - dir][j + 1];
+                new_grid[i][j] = 0;
+                new_grid_colours[i][j] = sf::Color::Transparent;
+              }
+            }
         }
-
-        if (within_cols(i - dir) && within_rows(j + 1)) {
-          below_b = grid[i - dir][j + 1];
-        }
-
-        // If the space directly below is empty, move the sand down
-        if (below_current == 0) {
-          new_grid[i][j + 1] = grid_current;
-          new_grid[i][j] = 0;  // Clear the old position
-        }
-        // If the left diagonal space is empty, move the sand there
-        else if (below_a == 0) {
-          new_grid[i + dir][j + 1] = grid_current;
-          new_grid[i][j] = 0;  // Clear the old position
-        }
-        // If the right diagonal space is empty, move the sand there
-        else if (below_b == 0) {
-          new_grid[i - dir][j + 1] = grid_current;
-          new_grid[i][j] = 0;  // Clear the old position
-        }
-      }
     }
-  }
 
-  grid = new_grid;  // Update the grid with new positions
+    grid = new_grid;
+    grid_colours = new_grid_colours;
 
-  // Spawn new sand if the mouse is pressed
-  if (is_left_mouse_down) {
-    spawnNewSand();
+    if (is_left_mouse_down) {
+        spawnNewSand();
+    }
+
+
+  // FPS
+  calcFPS();
+}
+
+void Game::calcFPS() {
+  frameCount++;
+
+  if (fpsClock.getElapsedTime().asSeconds() >= 1.0f) {
+    fps = frameCount / fpsClock.getElapsedTime().asSeconds();
+    if (fps < (TARGET_FPS / 2)) {
+      std::cerr << "FPS: " << fps << std::endl;
+    }
+    else {
+      std::cout << "FPS: " << fps << std::endl;
+    }
+    frameCount = 0;
+    fpsClock.restart();
   }
 }
 
@@ -98,37 +172,51 @@ void Game::spawnNewSand() {
   sf::Vector2i mouse_pixel = sf::Mouse::getPosition(window);
   sf::Vector2f mouse_world = window.mapPixelToCoords(mouse_pixel);
 
-  float dx = mouse_world.x - prev_mouse_pos.x;
-  float dy = mouse_world.y - prev_mouse_pos.y;
-  float distance = std::sqrt(dx * dx + dy * dy);
-  int steps = static_cast<int>(distance / (sand_size * 0.5f)) + 1;
+  if (spawn_multiple) {
+    // Spawn Multiple
+    int center_col = static_cast<int>(mouse_world.x / sand_size);
+    int center_row = static_cast<int>(mouse_world.y / sand_size);
+    int extent = static_cast<int>(std::floor(spawn_size / 2));
 
-  for (int s = 0; s <= steps; ++s) {
-    float x = prev_mouse_pos.x + dx * (s / static_cast<float>(steps));
-    float y = prev_mouse_pos.y + dy * (s / static_cast<float>(steps));
-    int i = static_cast<int>(x / sand_size);
-    int j = static_cast<int>(y / sand_size);
+    for (int i = -extent; i <= extent; i++) {
+      for (int j = -extent; j <= extent; j++) {
+        if (rand() % 100 < multiple_spawn_change) {
+          int col = center_col + i;
+          int row = center_row + j;
 
-    if (i >= 0 && i < cell_amt_x && j >= 0 && j < cell_amt_y) {
-      grid[i][j] = 1;
+          if (within_cols(col) && within_rows(row)) {
+            grid[col][row] = 1;
+          }
+        }
+      }
     }
   }
+  else {
+    // Spawn One
+    float dx = mouse_world.x - prev_mouse_pos.x;
+    float dy = mouse_world.y - prev_mouse_pos.y;
+    float distance = std::sqrt(dx * dx + dy * dy);
+    int steps = static_cast<int>(distance / (sand_size * 0.5f)) + 1;
 
-  prev_mouse_pos = mouse_world;
+    for (int s = 0; s <= steps; ++s) {
+      float x = prev_mouse_pos.x + dx * (s / static_cast<float>(steps));
+      float y = prev_mouse_pos.y + dy * (s / static_cast<float>(steps));
+      int i = static_cast<int>(x / sand_size);
+      int j = static_cast<int>(y / sand_size);
+
+      if (within_cols(i) && within_rows(j)) {
+        grid[i][j] = 1;
+      }
+    }
+
+    prev_mouse_pos = mouse_world;
+  }
 }
 
-sf::RectangleShape Game::drawCell(sf::Vector2i interator, bool isSand) {
+sf::RectangleShape Game::drawCell(sf::Vector2i interator, sf::Color colour) {
   sf::RectangleShape rect;
   rect.setSize(sf::Vector2f(sand_size, sand_size));
-
-  if (isSand) {
-    rect.setFillColor(sf::Color(209, 166, 109, 255));
-  }
-  else {
-    rect.setFillColor(sf::Color::Transparent);
-  }
-
-
+  rect.setFillColor(colour);
   rect.setPosition(interator.x * sand_size, interator.y * sand_size);
 
   return rect;
@@ -136,16 +224,14 @@ sf::RectangleShape Game::drawCell(sf::Vector2i interator, bool isSand) {
 
 void Game::render()
 {
-
   for (int i = 0; i < cell_amt_x; i++) {
     for (int j = 0; j < cell_amt_y; j++) {
       if (grid[i][j] > 0) {
-        window.draw(drawCell({i, j}, true));
-      } else {
-        window.draw(drawCell({i, j}, false));
+       window.draw(drawCell({i, j}, image_colours[i][j]));
       }
     }
   }
+
 
 }
 

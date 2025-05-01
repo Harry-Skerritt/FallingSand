@@ -9,14 +9,18 @@ int main()
             << std::endl;
 
   // create window and set up
-  sf::RenderWindow window(sf::VideoMode(500, 300), "Falling Sand Simulator");
-  window.setFramerateLimit(60);
+  sf::RenderWindow window(sf::VideoMode(300, 300), "Falling Sand Simulator");
+
+
+  Game game(window);
+
+  window.setFramerateLimit(game.TARGET_FPS);
 
   // A Clock starts counting as soon as it's created
   sf::Clock clock;
 
   //initialise an instance of the game class
-  Game game(window);
+
 
   //run the init function of the game class and check it all initialises ok
   if (!game.init())
