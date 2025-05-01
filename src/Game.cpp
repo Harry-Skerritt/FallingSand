@@ -3,6 +3,8 @@
 #include <iostream>
 #include <math.h>
 
+#include "SFML/Audio/SoundRecorder.hpp"
+
 Game::Game(sf::RenderWindow& game_window)
   : window(game_window)
 {
@@ -51,6 +53,36 @@ void Game::cachePixels() {
 
 }
 
+sf::Color Game::getAverageColour(const sf::Image& image) {
+  unsigned int width = image.getSize().x;
+  unsigned int height = image.getSize().y;
+
+  // Variables to store the sum of each color channel
+  unsigned long long redSum = 0;
+  unsigned long long greenSum = 0;
+  unsigned long long blueSum = 0;
+
+  // Loop through all pixels and accumulate color values
+  for (unsigned int x = 0; x < width; ++x) {
+    for (unsigned int y = 0; y < height; ++y) {
+      sf::Color pixelColor = image.getPixel(x, y);
+      redSum += pixelColor.r;
+      greenSum += pixelColor.g;
+      blueSum += pixelColor.b;
+    }
+  }
+
+  // Calculate the average color
+  unsigned int totalPixels = width * height;
+  sf::Color avgColor(
+      static_cast<sf::Uint8>(redSum / totalPixels),
+      static_cast<sf::Uint8>(greenSum / totalPixels),
+      static_cast<sf::Uint8>(blueSum / totalPixels)
+  );
+
+  return avgColor;
+}
+
 
 float Game::getFilledPercentage() const {
   int filled_cells = 0;
@@ -79,14 +111,18 @@ bool Game::init()
   grid_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y, sf::Color::Transparent));
   image_colours.resize(cell_amt_x, std::vector<sf::Color>(cell_amt_y, sf::Color::Black));
 
-  if (loadAlbum("../Data/ssoass.jpg")) {
+  background.setSize(window_size);
+  background.setFillColor(sf::Color::White);
+
+  if (loadAlbum("../Data/gsiosp.png")) {
     cachePixels();
+    background_colour = getAverageColour(album);
+    background.setFillColor(sf::Color(background_colour.r, background_colour.g, background_colour.b, background_colour.a * 0.4f));
   }
   else {
     std::cerr << "Failed to load and cache album" << std::endl;
     return false;
   }
-
 
 
   return true;
@@ -224,6 +260,9 @@ sf::RectangleShape Game::drawCell(sf::Vector2i interator, sf::Color colour) {
 
 void Game::render()
 {
+
+  window.draw(background);
+
   for (int i = 0; i < cell_amt_x; i++) {
     for (int j = 0; j < cell_amt_y; j++) {
       if (grid[i][j] > 0) {
@@ -231,8 +270,6 @@ void Game::render()
       }
     }
   }
-
-
 }
 
   void Game::mouseClicked(sf::Event event)

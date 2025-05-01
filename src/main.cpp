@@ -9,8 +9,7 @@ int main()
             << std::endl;
 
   // create window and set up
-  sf::RenderWindow window(sf::VideoMode(300, 300), "Falling Sand Simulator");
-
+  sf::RenderWindow window(sf::VideoMode(800, 800), "Falling Sand Simulator");
 
   Game game(window);
 
