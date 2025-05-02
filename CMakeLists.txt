@@ -19,13 +19,24 @@ FetchContent_MakeAvailable(SFML)    # Makes sure SFML and its dependencies are a
 
 #---- File management & .exe creation ----#
 
-set(SOURCE_FILES src/main.cpp src/Game.cpp src/Game.h src/resources.rc)  # Sets variable SOURCE_FILES to hold names & locations of files that need to be compiled into the application
+set(SOURCE_FILES
+        src/main.cpp
+        src/Game.cpp
+        src/Game.h
+        src/resources.rc
+        libs/TinyFileDialogs/tinyfiledialogs.h
+        libs/TinyFileDialogs/tinyfiledialogs.cpp
+        src/Simulation/SandSimulation.cpp
+        src/Simulation/SandSimulation.h
+        src/Simulation/SimulationWindow.cpp
+        src/Simulation/SimulationWindow.h
+)  # Sets variable SOURCE_FILES to hold names & locations of files that need to be compiled into the application
 
 if(WIN32)
     set(APP_ICON_RESOURCE "${CMAKE_CURRENT_SOURCE_DIR}/resources.rc")
 endif()
 
-add_executable(FallingSandSim WIN32 ${SOURCE_FILES})  # Names the application and tells compiler which source files to use
+add_executable(FallingSandSim ${SOURCE_FILES})  # Names the application and tells compiler which source files to use
 
 target_link_libraries(FallingSandSim PRIVATE sfml-graphics sfml-window sfml-system sfml-network sfml-audio) # Links the SFML libraries we need to our application
 target_compile_features(FallingSandSim PRIVATE cxx_std_20)  # Defines which standard of C++ the compiler should use

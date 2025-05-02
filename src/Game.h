@@ -3,6 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <vector>
+#include "../libs/TinyFileDialogs/tinyfiledialogs.h"
 
 class Game
 {
@@ -22,59 +23,22 @@ class Game
   void mouseScroll(sf::Event event);
   void mouseDragged(sf::Event event);
 
+  bool showSimulation() const { return show_simulation; }
 
-
- // Sand related
- void spawnNewSand();
- sf::RectangleShape drawCell(sf::Vector2i pos, sf::Color colour);
- float getFilledPercentage() const;
-
- // Checks
- bool within_cols(int x) const;
- bool within_rows(int y) const;
-
- // Photo related
- bool loadAlbum(std::string loc);
- void cachePixels();
- sf::Color getAverageColour(const sf::Image& image);
-
- int getSandParticleCount() const;
-
+ void openImageFileDialog();
  void calcFPS();
+
+ sf::Vector2f sim_window_size = {800, 800};
 
  private:
   sf::RenderWindow& window;
-
-  sf::Vector2f window_size;
-
-  std::vector<std::vector<int>> grid;
-  std::vector<std::vector<sf::Color>> grid_colours;
-  std::vector<std::vector<sf::Color>> image_colours;
-
-  float sand_size = 2; // "resolution"
-  int cell_amt_x, cell_amt_y;
-
- int spawn_size = 1; // "5x5 grid"
- int multiple_spawn_change = 40; // 40%
- bool spawn_multiple = true;
-
- // Map to picture
- sf::Image album;
- sf::Texture colour_data_texture;
- sf::Image colour_data_image;
-
- // Sand
- sf::VertexArray sand_verts;
-
- sf::Color background_colour;
- sf::RectangleShape background;
 
  // Info
  sf::Font font;
  sf::Text fps_text;
  sf::Text particle_text;
  sf::Text spawn_text;
- bool draw_info = true;
+ bool draw_info = false;
 
  // Mouse drag
  bool is_left_mouse_down = false;
@@ -90,6 +54,8 @@ class Game
  bool shader_loaded = false;
  sf::Clock clock;
 
+
+ bool show_simulation = false;
 
 
 };
