@@ -60,3 +60,4 @@ fabric.properties
 
 Tools/
 Tools/**/
+/thirdparty/imgui-sfml/

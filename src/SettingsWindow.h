@@ -1,18 +1,19 @@
 #ifndef SPACEINVADERS_GAME_H
 #define SPACEINVADERS_GAME_H
 
+#include "../thirdparty/TinyFileDialogs/tinyfiledialogs.h"
 #include <SFML/Graphics.hpp>
-#include <vector>
-#include "../libs/TinyFileDialogs/tinyfiledialogs.h"
+#include "gui-widgets/Button.h"
+#include "gui-widgets/HorizontalSeperator.h"
 
-class Game
+class SettingsWindow
 {
  public:
 
  const static int TARGET_FPS = 144;
 
-  Game(sf::RenderWindow& window);
-  ~Game();
+  SettingsWindow(sf::RenderWindow& window);
+  ~SettingsWindow();
   bool init();
   void update(float dt);
   void render();
@@ -32,6 +33,23 @@ class Game
 
  private:
   sf::RenderWindow& window;
+  bool show_simulation = false;
+
+  // Main Header
+  sf::Texture icon_texture;
+  sf::Sprite icon_sprite;
+
+  sf::Text title_text;
+  sf::Text subtitle_text;
+  HorizontalSeparator hoz_sep_main_header;
+
+
+  // Sim Button
+  Button btn_start_simulation;
+
+
+
+
 
  // Info
  sf::Font font;
@@ -55,7 +73,7 @@ class Game
  sf::Clock clock;
 
 
- bool show_simulation = false;
+
 
 
 };

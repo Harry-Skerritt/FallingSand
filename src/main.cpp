@@ -1,9 +1,8 @@
+#include "SettingsWindow.h"
+#include "Simulation/SimulationWindow.h"
+#include <SFML/Graphics.hpp>
 #include <iostream>
 #include <set>
-#include <SFML/Graphics.hpp>
-#include "Game.h"
-#include "Simulation/SimulationWindow.h"
-
 
 int main()
 {
@@ -17,19 +16,20 @@ int main()
   }
   settings_window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
-  Game game(settings_window);
+  SettingsWindow set_window(settings_window);
 
-  settings_window.setFramerateLimit(game.TARGET_FPS);
+  settings_window.setFramerateLimit(set_window.TARGET_FPS);
   sf::Clock clock;
 
-  if (!game.init())
+  if (!set_window.init())
     return 0;
 
   while (settings_window.isOpen())
   {
     sf::Event event;
 
-    float dt = clock.restart().asSeconds();
+    sf::Time time = clock.restart();
+    float dt = time.asSeconds();
 
     while (settings_window.pollEvent(event))
     {
@@ -40,40 +40,40 @@ int main()
 
       if (event.type == sf::Event::KeyPressed)
       {
-        game.keyPressed(event);
+        set_window.keyPressed(event);
       }
 
       if (event.type == sf::Event::KeyReleased)
       {
-        game.keyReleased(event);
+        set_window.keyReleased(event);
       }
 
       if (event.type == sf::Event::MouseButtonPressed)
       {
-        game.mouseClicked(event);
+        set_window.mouseClicked(event);
       }
 
       if (event.type == sf::Event::MouseButtonReleased)
       {
-        game.mouseReleased(event);
+        set_window.mouseReleased(event);
       }
 
       if (event.type == sf::Event::MouseWheelScrolled)
       {
-        game.mouseScroll(event);
+        set_window.mouseScroll(event);
       }
 
       if (event.type == sf::Event::MouseMoved)
       {
-        game.mouseDragged(event);
+        set_window.mouseDragged(event);
       }
     }
 
     // Create sim window
-    if (game.showSimulation() & !sim_window) {
-      sim_window = new sf::RenderWindow(sf::VideoMode(game.sim_window_size.x, game.sim_window_size.y), "Falling Sand Simulator - Simulation");
+    if (set_window.showSimulation() & !sim_window) {
+      sim_window = new sf::RenderWindow(sf::VideoMode(set_window.sim_window_size.x, set_window.sim_window_size.y), "Falling Sand Simulator - Simulation");
       sim_window->setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
-      sim_window->setFramerateLimit(game.TARGET_FPS);
+      sim_window->setFramerateLimit(set_window.TARGET_FPS);
 
       sim_window->setPosition(sf::Vector2i(
         settings_window.getPosition().x + static_cast<int>(settings_window.getSize().x) + 10,
@@ -84,7 +84,7 @@ int main()
     }
 
     // Close sim window
-    if (!game.showSimulation() && sim_window && sim_window->isOpen()) {
+    if (!set_window.showSimulation() && sim_window && sim_window->isOpen()) {
       sim_window->close();
       delete sim_window;
       sim_window = nullptr;
@@ -125,9 +125,9 @@ int main()
 
 
 
-    game.update(dt);
+    set_window.update(dt);
     settings_window.clear(sf::Color(84, 114, 78, 255));
-    game.render();
+    set_window.render();
     settings_window.display();
 
     if (sim_window && sim_window->isOpen()) {
@@ -136,10 +136,6 @@ int main()
       simulation_window->renderSimulation();
       sim_window->display();
     }
-
-
-    //if (sim_window) delete sim_window;
-   // if (simulation_window) delete simulation_window;
   }
 
   return 0;

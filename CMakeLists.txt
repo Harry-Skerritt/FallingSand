@@ -21,15 +21,18 @@ FetchContent_MakeAvailable(SFML)    # Makes sure SFML and its dependencies are a
 
 set(SOURCE_FILES
         src/main.cpp
-        src/Game.cpp
-        src/Game.h
+        src/SettingsWindow.cpp
+        src/SettingsWindow.h
         src/resources.rc
-        libs/TinyFileDialogs/tinyfiledialogs.h
-        libs/TinyFileDialogs/tinyfiledialogs.cpp
         src/Simulation/SandSimulation.cpp
         src/Simulation/SandSimulation.h
         src/Simulation/SimulationWindow.cpp
         src/Simulation/SimulationWindow.h
+        src/gui-widgets/Button.h
+
+        thirdparty/TinyFileDialogs/tinyfiledialogs.h
+        thirdparty/TinyFileDialogs/tinyfiledialogs.cpp
+        src/gui-widgets/HorizontalSeperator.h
 )  # Sets variable SOURCE_FILES to hold names & locations of files that need to be compiled into the application
 
 if(WIN32)
