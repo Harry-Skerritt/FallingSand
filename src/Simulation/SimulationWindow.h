@@ -7,11 +7,12 @@
 
 #include <SFML/Graphics.hpp>
 
+#include "../SharedData.h"
 #include "SandSimulation.h"
 
 class SimulationWindow {
 public:
-    SimulationWindow(sf::RenderWindow& game_window);
+    SimulationWindow(sf::RenderWindow& game_window, SharedData* sharedData);
     ~SimulationWindow();
 
     bool initSimulation();
@@ -28,10 +29,12 @@ public:
     void keyReleased(sf::Event event);
     void mouseScroll(sf::Event event);
 
+     SandSimulation* getSandSimulation() { return sandSimulation; };
+
 
 private:
     sf::RenderWindow& window;
-
+    SharedData* shared_data;
 
     SandSimulation* sandSimulation;
 

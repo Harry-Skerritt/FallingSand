@@ -39,6 +39,9 @@ set(SOURCE_FILES
         src/gui-widgets/TextElement.hpp
         src/gui-widgets/ColourPicker.hpp
         src/gui-widgets/CheckBox.hpp
+        src/SharedData.cpp
+        src/SharedData.h
+        src/gui-widgets/TextEntryField.hpp
 )  # Sets variable SOURCE_FILES to hold names & locations of files that need to be compiled into the application
 
 if(WIN32)

@@ -6,6 +6,9 @@
 
 int main()
 {
+
+  SharedData shared_data;
+
   sf::RenderWindow settings_window(sf::VideoMode(500, 630), "Falling Sand Simulator - Settings");
   sf::RenderWindow* sim_window = nullptr;
   SimulationWindow* simulation_window = nullptr;
@@ -16,7 +19,7 @@ int main()
   }
   settings_window.setIcon(icon.getSize().x, icon.getSize().y, icon.getPixelsPtr());
 
-  SettingsWindow set_window(settings_window);
+  SettingsWindow set_window(settings_window, &shared_data);
 
   settings_window.setFramerateLimit(set_window.TARGET_FPS);
   sf::Clock clock;
@@ -33,6 +36,8 @@ int main()
 
     while (settings_window.pollEvent(event))
     {
+      set_window.handleGenericEvent(event);
+
       if (event.type == sf::Event::Closed)
       {
         settings_window.close();
@@ -79,7 +84,7 @@ int main()
         settings_window.getPosition().x + static_cast<int>(settings_window.getSize().x) + 10,
         settings_window.getPosition().y));
 
-      simulation_window = new SimulationWindow(*sim_window);
+      simulation_window = new SimulationWindow(*sim_window, &shared_data);
       if (!simulation_window->initSimulation()) return 0;
     }
 
@@ -97,7 +102,7 @@ int main()
     if (sim_window && sim_window->isOpen()) {
       while (sim_window->pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
-          sim_window->close();
+          continue;
         }
 
         if (event.type == sf::Event::KeyPressed) {

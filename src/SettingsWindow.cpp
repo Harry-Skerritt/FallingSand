@@ -6,8 +6,8 @@
 
 #include "SFML/Audio/SoundRecorder.hpp"
 
-SettingsWindow::SettingsWindow(sf::RenderWindow& game_window)
-  : window(game_window)
+SettingsWindow::SettingsWindow(sf::RenderWindow& game_window, SharedData* sharedData)
+  : window(game_window), shared_data(sharedData)
 {
   srand(time(NULL));
 }
@@ -83,12 +83,14 @@ bool SettingsWindow::init()
     std::cout << "Image selected\n";
     use_image = true;
     use_solid_colour = false;
+    updated_window_size = false;
   };
   rb_solid_colour->onSelect = [this]()
   {
     std::cout << "Colour selected\n";
     use_solid_colour = true;
     use_image = false;
+    updated_window_size = false;
   };
 
   ver_sep_source.init({window_size.x *0.35f, window_size.y * 0.22f}, 72, 2, sf::Color::White);
@@ -99,6 +101,8 @@ bool SettingsWindow::init()
   file_name.init({window_size.x * 0.476f, window_size.y * 0.225f}, file_path_name, &font, (window_size.x * 0.03f), sf::Color(0, 58, 15, 255));
   file_name.setTruncateType(TruncateType::Ellipsis);
   file_name.setMaxWidth(130);
+
+  shared_data->path_to_image = full_file_path;
 
   btn_choose_file.init({window_size.x * 0.758f, window_size.y * 0.225f},
      {window_size.x*0.212f, window_size.y*0.031f}, button_colour, "Choose", &font);
@@ -113,7 +117,38 @@ bool SettingsWindow::init()
 
   rainbow_selection = new CheckBox({window_size.x * 0.758f, window_size.y * 0.287f}, {20, 20}, "Rainbow", &font);
 
+  // Window Size
+  window_size_label.init({window_size.x * 0.106f, window_size.y * 0.341f}, "Window Size:", &font, (window_size.x * 0.03f));
 
+  width_text_entry = new TextEntryField(100, 20, sf::Color(217, 217, 217, 255), sf::Color::Black);
+  width_text_entry->setFont(font);
+  width_text_entry->setPosition(window_size.x * 0.39f, window_size.y * 0.338f);
+  width_text_entry->setTextSize(window_size.y * 0.0238f);
+
+  window_x_text.init({window_size.x * 0.62f, window_size.y * 0.341f}, "x", &font, (window_size.x * 0.03f));
+
+
+  height_text_entry = new TextEntryField(100, 20, sf::Color(217, 217, 217, 255), sf::Color::Black);
+  height_text_entry->setFont(font);
+  height_text_entry->setPosition(window_size.x * 0.664f, window_size.y * 0.338f);
+  height_text_entry->setTextSize(window_size.y * 0.0238f);
+
+  width_text_entry->onTextTyped([this](const std::string& text)
+  {
+    if (locked_aspect_ratio)
+    {
+        if (!text.empty())
+        {
+            int newWidth = std::stoi(text);
+            int newHeight = calculateAspectHeight(
+                std::round(sim_window_size.x),
+                std::round(sim_window_size.y),
+                newWidth
+            );
+            height_text_entry->setString(std::to_string(newHeight));
+        }
+    }
+  });
 
 
 
@@ -134,6 +169,14 @@ bool SettingsWindow::init()
   return true;
 }
 
+int SettingsWindow::calculateAspectHeight(
+  int originalWidth, int originalHeight, int newWidth)
+{
+  if (originalWidth == 0) return 0; // Prevent division by zero
+  float aspectRatio = static_cast<float>(originalHeight) / static_cast<float>(originalWidth);
+  return static_cast<int>(newWidth * aspectRatio);
+}
+
 void SettingsWindow::update(float dt)
 {
   sf::Vector2i mouse_pixel = sf::Mouse::getPosition(window);
@@ -142,52 +185,128 @@ void SettingsWindow::update(float dt)
   // Header
   btn_start_simulation.update(mouse_world, dt);
 
-  // Source Header
-  rb_image->update(mouse_world);
-  rb_solid_colour->update(mouse_world);
-
-  if (use_image)
+  if (use_solid_colour || use_rainbow)
   {
-    // Using Image
-    file_label.setFillColor(sf::Color::White);
-    file_name.setFillColor(sf::Color(0, 58, 15, 255));
-    btn_choose_file.setButtonColours(button_colour, button_hover);
-    btn_choose_file.update(mouse_world, dt);
-    file_name.setText(file_path_name);
+    sim_window_size = default_sim_window_size;
+    if (!updated_window_size)
+    {
+      width_text_entry->setString(std::to_string(std::round(sim_window_size.x)));
+      height_text_entry->setString(std::to_string(std::round(sim_window_size.y)));
+      updated_window_size = true;
+    }
+
+    locked_aspect_ratio = false;
+  }
+  else if (use_image)
+  {
+    sf::Image image;
+    if (!image.loadFromFile(full_file_path))
+    {
+      std::cerr << "Failed to load image: " << full_file_path << std::endl;
+    }
+
+    sim_window_size = sf::Vector2f(image.getSize().x, image.getSize().y);
+    if (!updated_window_size)
+    {
+      width_text_entry->setString(std::to_string(std::round(sim_window_size.x)));
+      height_text_entry->setString(std::to_string(std::round(sim_window_size.y)));
+      updated_window_size = true;
+    }
+    locked_aspect_ratio = true;
+  }
+
+  if (!show_simulation)
+  {
+    // Source Header
+    rb_image->update(mouse_world);
+    rb_solid_colour->update(mouse_world);
+    shared_data->use_image = use_image;
+    shared_data->use_colour = use_solid_colour;
+    shared_data->use_rainbow = use_rainbow;
+
+    width_text_entry->setEnabled(true);
+    height_text_entry->setEnabled(true);
+    window_size_label.setFillColor(sf::Color::White);
+    window_x_text.setFillColor(sf::Color::White);
+
+    if (locked_aspect_ratio && width_text_entry->isEnabled())
+    {
+      height_text_entry->setEnabled(false);
+    }
+
+    rb_image->setCircleColor(sf::Color::White, sf::Color::White);
+    rb_solid_colour->setCircleColor(sf::Color::White, sf::Color::White);
+
+    if (use_image)
+    {
+      // Using Image
+      file_label.setFillColor(sf::Color::White);
+      file_name.setFillColor(sf::Color(0, 58, 15, 255));
+      btn_choose_file.setButtonColours(button_colour, button_hover);
+      btn_choose_file.update(mouse_world, dt);
+      file_name.setText(file_path_name);
+
+      // Disable Colour
+      colour_label.setFillColor(disabled_colour);
+      rainbow_selection->setColour(disabled_colour);
+      colour_picker->setDisabled(true);
+
+    }
+
+    if (use_solid_colour)
+    {
+      // Using Solid Colour
+      colour_label.setFillColor(sf::Color::White);
+      rainbow_selection->update(mouse_world);
+      use_rainbow = rainbow_selection->isChecked();
+      shared_data->use_rainbow = use_rainbow;
+
+      if (!use_rainbow)
+      {
+        colour_picker->update(mouse_world);
+        picked_colour = colour_picker->getColourRGB();
+        rainbow_selection->setColour(disabled_colour);
+        shared_data->selected_colour = picked_colour;
+        shared_data->selected_background_color = sf::Color(picked_colour.r * 0.4f, picked_colour.g * 0.4f,picked_colour.b * 0.4f, picked_colour.a);
+        colour_picker->setDisabled(false);
+      }
+      else
+      {
+        rainbow_selection->setColour(sf::Color::White);
+        colour_picker->setDisabled(true);
+      }
+
+
+      // Disable Image
+      file_label.setFillColor(disabled_colour);
+      file_name.setFillColor(disabled_colour);
+      btn_choose_file.setButtonColours(disabled_colour, disabled_colour);
+    }
+  }
+  else
+  {
+    // Disable everything
+    // Disable Image
+    file_label.setFillColor(disabled_colour);
+    file_name.setFillColor(disabled_colour);
+    btn_choose_file.setButtonColours(disabled_colour, disabled_colour);
 
     // Disable Colour
     colour_label.setFillColor(disabled_colour);
     rainbow_selection->setColour(disabled_colour);
     colour_picker->setDisabled(true);
 
+    // Radio
+    rb_image->setCircleColor(disabled_colour, disabled_colour);
+    rb_solid_colour->setCircleColor(disabled_colour, disabled_colour);
+
+    // Window Size
+    width_text_entry->setEnabled(false);
+    height_text_entry->setEnabled(false);
+    window_size_label.setFillColor(disabled_colour);
+    window_x_text.setFillColor(disabled_colour);
   }
 
-  if (use_solid_colour)
-  {
-    // Using Solid Colour
-    colour_label.setFillColor(sf::Color::White);
-    rainbow_selection->update(mouse_world);
-    use_rainbow = rainbow_selection->isChecked();
-
-    if (!use_rainbow)
-    {
-      colour_picker->update(mouse_world);
-      picked_colour = colour_picker->getColourRGB();
-      rainbow_selection->setColour(disabled_colour);
-      colour_picker->setDisabled(false);
-    }
-    else
-    {
-      rainbow_selection->setColour(sf::Color::White);
-      colour_picker->setDisabled(true);
-    }
-
-
-    // Disable Image
-    file_label.setFillColor(disabled_colour);
-    file_name.setFillColor(disabled_colour);
-    btn_choose_file.setButtonColours(disabled_colour, disabled_colour);
-  }
 
 
 
@@ -219,6 +338,11 @@ void SettingsWindow::render()
   window.draw(*colour_picker);
   window.draw(*rainbow_selection);
 
+  window.draw(window_size_label);
+  window.draw(*width_text_entry);
+  window.draw(window_x_text);
+  window.draw(*height_text_entry);
+
 }
 
 void SettingsWindow::openImageFileDialog() {
@@ -237,31 +361,14 @@ void SettingsWindow::openImageFileDialog() {
 
     std::filesystem::path filepath(file);
     file_path_name = filepath.filename().string();;
+
+    shared_data->path_to_image = full_file_path;
+
+    updated_window_size = false;
+
   }
   else
     std::cout << "No File" << std::endl;
-}
-
-bool SettingsWindow::pickColour(sf::Color& out_colour, std::string& hex_colour)
-{
-  unsigned char colour[3] = { 255, 255, 255 };
-  const char* result = tinyfd_colorChooser(
-      "Choose a Colour",
-      nullptr,
-      colour,
-      colour
-  );
-
-  hex_colour = result;
-
-  if (result) {
-    out_colour.r = colour[0];
-    out_colour.g = colour[1];
-    out_colour.b = colour[2];
-    out_colour.a = 255;
-    return true;
-  }
-  return false;
 }
 
 void SettingsWindow::calcFPS() {
@@ -275,6 +382,11 @@ void SettingsWindow::calcFPS() {
 
 }
 
+void SettingsWindow::handleGenericEvent(sf::Event event)
+{
+  width_text_entry->handleEvent(event, window);
+  height_text_entry->handleEvent(event, window);
+}
 
 
 void SettingsWindow::mouseClicked(sf::Event event)
@@ -291,6 +403,11 @@ void SettingsWindow::mouseClicked(sf::Event event)
   // Start Sim Button
   if (btn_start_simulation.getGlobalBounds().contains(mouse_world))
   {
+    shared_data->use_image = use_image;
+    shared_data->use_colour = use_rainbow ? false : use_solid_colour;
+    shared_data->use_rainbow = use_rainbow;
+    sim_window_size = sf::Vector2f(std::stof(width_text_entry->getString()), std::stof(height_text_entry->getString()));
+
     show_simulation = !show_simulation;
     if (show_simulation)
     {
@@ -319,16 +436,6 @@ void SettingsWindow::mouseReleased(sf::Event event)
 
 void SettingsWindow::keyPressed(sf::Event event)
 {
-  if (event.key.code == sf::Keyboard::L) {
-    sf::Color test;
-    std::string test_str;
-    bool test_bool = pickColour(test, test_str);
-    std::cout << test_str << " Color: " << unsigned(test.r) << ", " << unsigned(test.g) << ", " << unsigned(test.b) << std::endl;
-  }
-
-  if (event.key.code == sf::Keyboard::S) {
-    show_simulation = !show_simulation;
-  }
 
 }
 

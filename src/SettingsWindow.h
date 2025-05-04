@@ -2,6 +2,7 @@
 #define SPACEINVADERS_GAME_H
 
 #include "../thirdparty/TinyFileDialogs/tinyfiledialogs.h"
+#include "SharedData.h"
 #include "gui-widgets/Button.hpp"
 #include "gui-widgets/CheckBox.hpp"
 #include "gui-widgets/ColourPicker.hpp"
@@ -9,6 +10,7 @@
 #include "gui-widgets/HorizontalSeperator.hpp"
 #include "gui-widgets/RadioButton.hpp"
 #include "gui-widgets/TextElement.hpp"
+#include "gui-widgets/TextEntryField.hpp"
 #include "gui-widgets/VerticalSeparator.hpp"
 
 #include <SFML/Graphics.hpp>
@@ -19,7 +21,7 @@ class SettingsWindow
 
  const static int TARGET_FPS = 144;
 
-  SettingsWindow(sf::RenderWindow& window);
+  SettingsWindow(sf::RenderWindow& game_window, SharedData* sharedData);
   ~SettingsWindow();
   bool init();
   void update(float dt);
@@ -30,20 +32,24 @@ class SettingsWindow
   void keyReleased(sf::Event event);
   void mouseScroll(sf::Event event);
   void mouseDragged(sf::Event event);
+  void handleGenericEvent(sf::Event event);
 
   bool showSimulation() const { return show_simulation; }
 
   void openImageFileDialog();
+  int calculateAspectHeight(int originalWidth, int originalHeight, int newWidth);
   bool pickColour(sf::Color& out_colour, std::string& hex_colour);
   void calcFPS();
 
- sf::Vector2f sim_window_size = {800, 800};
+  sf::Vector2f default_sim_window_size = {800, 800};
+  sf::Vector2f sim_window_size = default_sim_window_size;
 
  private:
   sf::RenderWindow& window;
   bool show_simulation = false;
   sf::Color button_colour = sf::Color(15, 89, 0, 255);
   sf::Color button_hover = sf::Color(109, 179, 95, 255);
+  SharedData* shared_data;
 
   // Main Header
   sf::Texture icon_texture;
@@ -70,16 +76,24 @@ class SettingsWindow
   TextElement file_label;
   TextElement file_name;
   Button btn_choose_file;
-  std::string full_file_path;
-  std::string file_path_name = "null";
+  std::string full_file_path = "../Data/gsiosp.png";
+  std::string file_path_name = "default.png";
 
-  // Image - Colour
+  // Colour - Source
   TextElement colour_label;
   ColourPicker* colour_picker;
   CheckBox* rainbow_selection;
-
   sf::Color picked_colour = sf::Color(237, 209, 130, 255);
   std::string picked_colour_hex = "";
+
+  // Window Size - Source
+  TextElement window_size_label;
+  TextEntryField* width_text_entry;
+  TextEntryField* height_text_entry;
+  TextElement window_x_text;
+  bool locked_aspect_ratio = false;
+  bool updated_window_size = false;
+
 
 
 

@@ -33,6 +33,7 @@ public:
     void cachePixels();
     sf::Color getAverageColour(const sf::Image& image);
     sf::Color getAverageBackgroundColour(sf::Color colour);
+    bool loadImageForSand(const std::string& path);
 
     // FPS
     void calcFPS();
@@ -51,6 +52,12 @@ public:
     sf::Color getBackgroundColour() const { return background_colour; }
 
 
+    void setUseImage(bool state) { use_image_colour = state; };
+    void setUseColour(bool state) { use_solid_colour = state; };
+    void setUseRainbow(bool state) { use_rainbow = state; };
+    void setImagePath(std::string path) { image_path = path; };
+
+
 
 
 private:
@@ -60,8 +67,8 @@ private:
     // Sand
     sf::VertexArray sand_verts;
     std::vector<std::vector<int>> sand_grid;
-    //std::vector<std::vector<sf::Color>> grid_colours;
-    //std::vector<std::vector<sf::Color>> image_colours;
+
+    std::string image_path;
 
 
     // Sand
@@ -73,7 +80,8 @@ private:
 
     // Solid Colours
     sf::Color sand_colour;
-    bool use_solid_colour = true;
+    bool use_image_colour = false;
+    bool use_solid_colour = false;
     bool use_rainbow = false;
 
     // Picture

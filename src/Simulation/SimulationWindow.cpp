@@ -3,9 +3,10 @@
 //
 
 #include "SimulationWindow.h"
+#include <iostream>
 
-SimulationWindow::SimulationWindow(sf::RenderWindow &game_window)
-    : window(game_window)
+SimulationWindow::SimulationWindow(sf::RenderWindow &game_window, SharedData* sharedData)
+    : window(game_window), shared_data(sharedData)
 {
     srand(time(NULL));
 }
@@ -15,18 +16,45 @@ SimulationWindow::~SimulationWindow() {}
 
 
 bool SimulationWindow::initSimulation() {
-    sandSimulation = new SandSimulation(window);
-    if (!sandSimulation->init()) {
-        return false;
-    }
-    sandSimulation->setSandSize(2);
-    sandSimulation->setBrushSize(4);
+  sandSimulation = new SandSimulation(window);
+  if (!sandSimulation->init()) {
+    return false;
+  }
+
+  // Set initial brush size
+  sandSimulation->setBrushSize(4);
+
+  std::cout << "Sim WIndow: \nImage: " << shared_data->use_image << "\n Solid Colour: " << shared_data->use_colour << "\n Rainbow: " << shared_data->use_rainbow << std::endl;
+
+
+  // Setting up the sand simulation based on SharedData flags
+  if (shared_data->use_image) {
+    // Load image and set background color to average image color
+    sandSimulation->setUseImage(true);
+    sandSimulation->setUseColour(false);
+    sandSimulation->setUseRainbow(false);
+    sandSimulation->setImagePath(shared_data->path_to_image);
+  }
+  else if (shared_data->use_colour) {
+    sandSimulation->setUseColour(true);
+    sandSimulation->setUseImage(false);
+    sandSimulation->setUseRainbow(false);
+    sandSimulation->setSandColour(shared_data->selected_colour);
+    sandSimulation->setBackgroundColour(shared_data->selected_background_color);
+  }
+  else if (shared_data->use_rainbow) {
+    sandSimulation->setUseRainbow(true);
+    sandSimulation->setUseImage(false);
+    sandSimulation->setUseColour(false);
     sandSimulation->setSandColour(sf::Color::Red);
-    sandSimulation->setBackgroundColour(sf::Color::Green);
-    sand_brush_size = sandSimulation->getBrushSize();
+    sandSimulation->setBackgroundColour(sf::Color::Black); // Black background for rainbow mode
+  }
 
+  sandSimulation->init();
 
-    return true;
+  sand_brush_size = sandSimulation->getBrushSize();
+
+  return true;
 }
 
 void SimulationWindow::updateSimulation(float dt) {
