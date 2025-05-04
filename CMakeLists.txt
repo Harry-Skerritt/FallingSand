@@ -28,11 +28,17 @@ set(SOURCE_FILES
         src/Simulation/SandSimulation.h
         src/Simulation/SimulationWindow.cpp
         src/Simulation/SimulationWindow.h
-        src/gui-widgets/Button.h
+        src/gui-widgets/Button.hpp
 
         thirdparty/TinyFileDialogs/tinyfiledialogs.h
         thirdparty/TinyFileDialogs/tinyfiledialogs.cpp
-        src/gui-widgets/HorizontalSeperator.h
+        src/gui-widgets/HorizontalSeperator.hpp
+        src/gui-widgets/HeadingWithLine.hpp
+        src/gui-widgets/RadioButton.hpp
+        src/gui-widgets/VerticalSeparator.hpp
+        src/gui-widgets/TextElement.hpp
+        src/gui-widgets/ColourPicker.hpp
+        src/gui-widgets/CheckBox.hpp
 )  # Sets variable SOURCE_FILES to hold names & locations of files that need to be compiled into the application
 
 if(WIN32)

@@ -2,9 +2,16 @@
 #define SPACEINVADERS_GAME_H
 
 #include "../thirdparty/TinyFileDialogs/tinyfiledialogs.h"
+#include "gui-widgets/Button.hpp"
+#include "gui-widgets/CheckBox.hpp"
+#include "gui-widgets/ColourPicker.hpp"
+#include "gui-widgets/HeadingWithLine.hpp"
+#include "gui-widgets/HorizontalSeperator.hpp"
+#include "gui-widgets/RadioButton.hpp"
+#include "gui-widgets/TextElement.hpp"
+#include "gui-widgets/VerticalSeparator.hpp"
+
 #include <SFML/Graphics.hpp>
-#include "gui-widgets/Button.h"
-#include "gui-widgets/HorizontalSeperator.h"
 
 class SettingsWindow
 {
@@ -26,14 +33,17 @@ class SettingsWindow
 
   bool showSimulation() const { return show_simulation; }
 
- void openImageFileDialog();
- void calcFPS();
+  void openImageFileDialog();
+  bool pickColour(sf::Color& out_colour, std::string& hex_colour);
+  void calcFPS();
 
  sf::Vector2f sim_window_size = {800, 800};
 
  private:
   sf::RenderWindow& window;
   bool show_simulation = false;
+  sf::Color button_colour = sf::Color(15, 89, 0, 255);
+  sf::Color button_hover = sf::Color(109, 179, 95, 255);
 
   // Main Header
   sf::Texture icon_texture;
@@ -43,9 +53,46 @@ class SettingsWindow
   sf::Text subtitle_text;
   HorizontalSeparator hoz_sep_main_header;
 
-
   // Sim Button
   Button btn_start_simulation;
+
+
+  // Source
+  HeadingWithLine hdn_source;
+
+  RadioButtonGroup source_button_group;
+  RadioButton* rb_image;
+  RadioButton* rb_solid_colour;
+
+  VerticalSeparator ver_sep_source;
+
+  // Image - Source
+  TextElement file_label;
+  TextElement file_name;
+  Button btn_choose_file;
+  std::string full_file_path;
+  std::string file_path_name = "null";
+
+  // Image - Colour
+  TextElement colour_label;
+  ColourPicker* colour_picker;
+  CheckBox* rainbow_selection;
+
+  sf::Color picked_colour = sf::Color(237, 209, 130, 255);
+  std::string picked_colour_hex = "";
+
+
+
+
+
+
+
+  // Options
+  bool use_image = true;
+  bool use_solid_colour = false;
+  bool use_rainbow = false;
+
+  sf::Color disabled_colour = sf::Color(89, 89, 89, 255);
 
 
 

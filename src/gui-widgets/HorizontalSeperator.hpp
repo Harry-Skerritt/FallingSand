@@ -9,7 +9,7 @@
 
 class HorizontalSeparator : public sf::Drawable {
 public:
-  HorizontalSeparator() {};
+  HorizontalSeparator() = default;
   HorizontalSeparator(const sf::Vector2f& position, float width, float height, const sf::Color& color) {
     line.setPosition(position);
     line.setSize(sf::Vector2f(width, height));
