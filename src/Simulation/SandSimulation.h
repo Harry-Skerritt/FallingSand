@@ -61,38 +61,50 @@ public:
 
 
 private:
-    sf::RenderWindow& window;
-    sf::Vector2f window_size;
+  sf::RenderWindow& window;
+  sf::Vector2f window_size;
 
-    // Sand
-    sf::VertexArray sand_verts;
-    std::vector<std::vector<int>> sand_grid;
+  // Sand
+  sf::VertexArray sand_verts;
+  std::vector<std::vector<int>> sand_grid;
 
-    std::string image_path;
+  std::string image_path;
 
 
-    // Sand
-    float sand_size = 2; // "resolution"
-    int cell_amt_x, cell_amt_y;
-    int spawn_size = 1; // "5x5 grid"
-    int multiple_spawn_change = 40; // 40%
-    bool spawn_multiple = true;
+  // Sand
+  float sand_size = 2; // "resolution"
+  int cell_amt_x, cell_amt_y;
+  int spawn_size = 1; // "5x5 grid"
+  int multiple_spawn_change = 40; // 40%
+  bool spawn_multiple = true;
 
-    // Solid Colours
-    sf::Color sand_colour;
-    bool use_image_colour = false;
-    bool use_solid_colour = false;
-    bool use_rainbow = false;
+  // Solid Colours
+  sf::Color sand_colour;
+  bool use_image_colour = false;
+  bool use_solid_colour = false;
+  bool use_rainbow = false;
 
-    // Picture
-    sf::Image album;
-    sf::Texture colour_data_texture;
-    sf::Image colour_data_image;
+  // Picture
+  sf::Image album;
+  sf::Texture colour_data_texture;
+  sf::Image colour_data_image;
 
-    // Background
-    sf::RectangleShape background;
-    sf::Color background_colour;
+  // Background
+  sf::RectangleShape background;
+  sf::Color background_colour;
 
+  // Shader
+  sf::Shader sand_shader;
+  bool shader_loaded = false;
+  sf::RenderTexture stateTextures[2]; // ping-pong textures
+  int currentState = 0;
+
+  sf::Sprite sim_sprite;
+  sf::RenderTexture sand_visual; // final texture for drawing
+
+  sf::Vector2u sim_resolution;
+
+  bool gpu_mode = true; // Enable GPU simulation
 
 
     // Helper Funcs

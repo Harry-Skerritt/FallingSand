@@ -150,22 +150,6 @@ bool SettingsWindow::init()
     }
   });
 
-
-
-
-
-
-
-
-  // Shader
-  if (!sand_shader.loadFromFile("../Data/Shaders/sand_shader.frag", sf::Shader::Fragment)) {
-    std::cerr << "Failed to load sand_shader.frag" << std::endl;
-    shader_loaded = false;
-  }
-  else {
-    shader_loaded = true;
-  }
-
   return true;
 }
 

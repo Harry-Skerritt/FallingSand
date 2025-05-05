@@ -129,8 +129,7 @@ class SettingsWindow
  float fps = 0.f;
 
  // Shader
- sf::Shader sand_shader;
- bool shader_loaded = false;
+
  sf::Clock clock;
 
 
